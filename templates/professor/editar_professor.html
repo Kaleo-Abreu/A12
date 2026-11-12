@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Professor{% endblock %}
+
+{% block content %}
+
+<div class="max-w-2xl mx-auto">
+
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">
+            Atualizar professor
+        </h1>
+
+        <p class="text-slate-500 mt-1">
+            Altere as informações do professor selecionado.
+        </p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+
+        {% if erros %}
+        <div class="mb-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <ul class="list-disc list-inside space-y-1">
+                {% for erro in erros %}
+                    <li>{{ erro }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form action="{{ url_for('editar_professor', matricula=professor.matricula) }}"
+              method="POST">
+
+            <div class="mb-5">
+                <label for="matricula"
+                       class="block text-sm font-medium text-slate-700 mb-2">
+                    Matrícula
+                </label>
+
+                <input
+                    type="text"
+                    id="matricula"
+                    name="matricula"
+                    value="{{ professor.matricula }}"
+                    readonly
+                    class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-slate-100 text-slate-500"
+                >
+            </div>
+
+            <div class="mb-5">
+                <label for="nome"
+                       class="block text-sm font-medium text-slate-700 mb-2">
+                    Nome completo
+                </label>
+
+                <input
+                    type="text"
+                    id="nome"
+                    name="nome"
+                    value="{{ request.form.get('nome', professor.nome) }}"
+                    required
+                    minlength="3"
+                    class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+            </div>
+
+            {% set titulacao_atual = request.form.get('titulacao', professor.titulacao) %}
+
+            <div class="mb-5">
+                <label for="titulacao"
+                       class="block text-sm font-medium text-slate-700 mb-2">
+                    Titulação
+                </label>
+
+                <select
+                    id="titulacao"
+                    name="titulacao"
+                    required
+                    class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    <option value="">Selecione...</option>
+                    <option value="Doutor" {% if titulacao_atual == 'Doutor' %}selected{% endif %}>Doutor</option>
+                    <option value="Mestre" {% if titulacao_atual == 'Mestre' %}selected{% endif %}>Mestre</option>
+                    <option value="Especialista" {% if titulacao_atual == 'Especialista' %}selected{% endif %}>Especialista</option>
+                </select>
+            </div>
+
+            {% set departamento_atual = request.form.get('numero_departamento', professor.numero_departamento) %}
+
+            <div class="mb-6">
+                <label for="numero_departamento"
+                       class="block text-sm font-medium text-slate-700 mb-2">
+                    Departamento
+                </label>
+
+                <select
+                    id="numero_departamento"
+                    name="numero_departamento"
+                    required
+                    class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    <option value="">Selecione...</option>
+
+                    {% for departamento in departamentos %}
+                    <option value="{{ departamento.numero }}"
+                            {% if departamento_atual|int == departamento.numero %}selected{% endif %}>
+                        {{ departamento.numero }} - {{ departamento.descricao }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex justify-end gap-3">
+
+                <a href="{{ url_for('professores') }}"
+                   class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100">
+                    Cancelar
+                </a>
+
+                <button
+                    type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                    Salvar alterações
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

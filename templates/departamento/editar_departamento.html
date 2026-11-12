@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Departamento{% endblock %}
+
+{% block content %}
+
+<div class="max-w-2xl mx-auto">
+
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">
+            Atualizar departamento
+        </h1>
+
+        <p class="text-slate-500 mt-1">
+            Altere as informações do departamento selecionado.
+        </p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+
+        {% if erros %}
+        <div class="mb-5 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <ul class="list-disc list-inside space-y-1">
+                {% for erro in erros %}
+                    <li>{{ erro }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form action="{{ url_for('editar_departamento', id=departamento.numero) }}"
+              method="POST">
+
+            <div class="mb-5">
+                <label for="numero"
+                       class="block text-sm font-medium text-slate-700 mb-2">
+                    Número do departamento
+                </label>
+
+                <input
+                    type="number"
+                    id="numero"
+                    name="numero"
+                    value="{{ departamento.numero }}"
+                    readonly
+                    class="w-full border border-slate-300 rounded-lg px-3 py-2 bg-slate-100 text-slate-500"
+                >
+            </div>
+
+            <div class="mb-6">
+                <label for="descricao"
+                       class="block text-sm font-medium text-slate-700 mb-2">
+                    Descrição
+                </label>
+
+                <input
+                    type="text"
+                    id="descricao"
+                    name="descricao"
+                    value="{{ request.form.get('descricao', departamento.descricao) }}"
+                    required
+                    minlength="3"
+                    class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+            </div>
+
+            <div class="flex justify-end gap-3">
+
+                <a href="/departamentos"
+                   class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100">
+                    Cancelar
+                </a>
+
+                <button
+                    type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                    Salvar alterações
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
