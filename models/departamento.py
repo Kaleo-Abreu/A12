@@ -1,6 +1,7 @@
 import sqlite3
 
-from dao import departamento_dao
+from dao.departamento_dao import DepartamentoDAO
+from utils.validacoes import inteiro_convertido, texto_valido, vazio
 
 
 class Departamento:
@@ -8,70 +9,95 @@ class Departamento:
 
     def __init__(self, dados):
         self._dados = dict(dados) if dados else {}
-        self.erros = []
+        self.errors = []
 
-    def validar(self):
+    def validate(self):
         """Valida os dados do departamento e preenche a lista de erros."""
-        self.erros = []
+        self.errors = []
 
-        numero = self._dados.get("numero")
+        numero_bruto = self._dados.get("numero")
         descricao = self._dados.get("descricao")
 
+        numero = inteiro_convertido(numero_bruto)
+
         # Validação do número
-        if numero is None or str(numero).strip() == "":
-            self.erros.append("O número do departamento é obrigatório.")
-        else:
-            try:
-                numero = int(numero)
+        if vazio(numero_bruto):
+            self.errors.append(
+                "O número do departamento é obrigatório."
+            )
 
-                if numero <= 0:
-                    self.erros.append("O número do departamento deve ser positivo.")
+        elif numero is None:
+            self.errors.append(
+                "O número do departamento deve ser um número inteiro."
+            )
 
-            except (ValueError, TypeError):
-                self.erros.append("O número do departamento deve ser um número inteiro.")
+        elif numero <= 0:
+            self.errors.append(
+                "O número do departamento deve ser positivo."
+            )
 
         # Validação da descrição
-        if descricao is None or str(descricao).strip() == "":
-            self.erros.append("A descrição do departamento é obrigatória.")
+        if vazio(descricao):
+            self.errors.append(
+                "A descrição do departamento é obrigatória."
+            )
 
-        elif len(str(descricao).strip()) < 3:
-            self.erros.append("A descrição deve possuir pelo menos 3 caracteres.")
+        elif not texto_valido(descricao, 3):
+            self.errors.append(
+                "A descrição deve possuir pelo menos 3 caracteres."
+            )
 
-        return len(self.erros) == 0
+        if self.errors:
+            return False
 
-    def inserir(self):
+        self._dados.update({
+            "numero": numero,
+            "descricao": str(descricao).strip()
+        })
+
+        return True
+
+    def save(self):
         """Valida e grava o departamento no banco. Retorna True em caso de sucesso."""
-        if not self.validar():
+        if not self.validate():
             return False
 
         try:
-            departamento_dao.inserir(
-                int(self._dados.get("numero")),
-                str(self._dados.get("descricao")).strip(),
-            )
+            DepartamentoDAO.inserir(self._dados)
+
         except sqlite3.IntegrityError:
             # Acontece, por exemplo, quando o número (chave primária) já existe
-            self.erros.append("Já existe um departamento com esse número.")
+            self.errors.append(
+                "Já existe um departamento com esse número."
+            )
             return False
 
         return True
 
     @staticmethod
-    def buscar_por_numero(numero):
-        """Busca um departamento pelo número."""
-        return departamento_dao.buscar_por_numero(numero)
-
-    @staticmethod
-    def listar_todos():
+    def exibir_departamentos():
         """Retorna todos os departamentos cadastrados."""
-        return departamento_dao.listar_todos()
+        return DepartamentoDAO.listar()
 
     @staticmethod
-    def atualizar(numero, descricao):
+    def verificar_numero(numero):
+        """Busca um departamento pelo número."""
+        return DepartamentoDAO.buscar_por_numero(numero)
+
+    @staticmethod
+    def atualizar_departamento(numero, dados):
         """Atualiza a descrição de um departamento existente."""
-        departamento_dao.atualizar(numero, descricao)
+        return DepartamentoDAO.atualizar(numero, dados)
 
     @staticmethod
-    def remover(numero):
+    def excluir_departamento(numero):
         """Remove o departamento com o número informado."""
-        departamento_dao.remover(numero)
+        return DepartamentoDAO.excluir(numero)
+
+    @property
+    def numero(self):
+        return self._dados.get("numero")
+
+    @property
+    def descricao(self):
+        return self._dados.get("descricao")

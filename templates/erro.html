@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Erro{% endblock %}
+
+{% block content %}
+
+<div class="max-w-xl mx-auto mt-8">
+
+    <div class="bg-white border border-slate-200 rounded-lg shadow-sm p-6">
+
+        <div class="text-center">
+
+            <div class="w-14 h-14 bg-yellow-100 text-yellow-700 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                !
+            </div>
+
+            <h1 class="text-2xl font-bold text-slate-800">
+                Não foi possível continuar
+            </h1>
+
+            <p class="text-slate-600 mt-2">
+                {{ mensagem }}
+            </p>
+
+        </div>
+
+        <div class="flex justify-center gap-3 mt-8">
+
+            <a href="{{ url_for('inicio') }}"
+               class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                Voltar ao início
+            </a>
+
+            <a href="{{ url_for('departamentos') }}"
+               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                Ver departamentos
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

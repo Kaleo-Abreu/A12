@@ -1,6 +1,7 @@
 import sqlite3
 
-from dao import professor_dao
+from dao.professor_dao import ProfessorDAO
+from utils.validacoes import inteiro_convertido, texto_valido, vazio
 
 # Titulações aceitas pelo sistema (mesmos valores permitidos no banco)
 TITULACOES = ("Doutor", "Mestre", "Especialista")
@@ -11,87 +12,121 @@ class Professor:
 
     def __init__(self, dados):
         self._dados = dict(dados) if dados else {}
-        self.erros = []
+        self.errors = []
 
-    def validar(self):
+    def validate(self):
         """Valida os dados do professor e preenche a lista de erros."""
-        self.erros = []
+        self.errors = []
 
         matricula = self._dados.get("matricula")
         nome = self._dados.get("nome")
         titulacao = self._dados.get("titulacao")
-        numero_departamento = self._dados.get("numero_departamento")
+        numero_departamento_bruto = self._dados.get("numero_departamento")
+
+        numero_departamento = inteiro_convertido(numero_departamento_bruto)
 
         # Validação da matrícula
-        if matricula is None or str(matricula).strip() == "":
-            self.erros.append("A matrícula do professor é obrigatória.")
+        if vazio(matricula):
+            self.errors.append("A matrícula do professor é obrigatória.")
 
         # Validação do nome
-        if nome is None or str(nome).strip() == "":
-            self.erros.append("O nome do professor é obrigatório.")
+        if vazio(nome):
+            self.errors.append("O nome do professor é obrigatório.")
 
-        elif len(str(nome).strip()) < 3:
-            self.erros.append("O nome deve possuir pelo menos 3 caracteres.")
+        elif not texto_valido(nome, 3):
+            self.errors.append(
+                "O nome deve possuir pelo menos 3 caracteres."
+            )
 
         # Validação da titulação
         if titulacao not in TITULACOES:
-            self.erros.append("A titulação deve ser Doutor, Mestre ou Especialista.")
+            self.errors.append(
+                "A titulação deve ser Doutor, Mestre ou Especialista."
+            )
 
         # Validação do departamento
-        if numero_departamento is None or str(numero_departamento).strip() == "":
-            self.erros.append("O departamento é obrigatório.")
-        else:
-            try:
-                if int(numero_departamento) <= 0:
-                    self.erros.append("O departamento selecionado é inválido.")
+        if vazio(numero_departamento_bruto):
+            self.errors.append("O departamento é obrigatório.")
 
-            except (ValueError, TypeError):
-                self.erros.append("O departamento selecionado é inválido.")
+        elif numero_departamento is None or numero_departamento <= 0:
+            self.errors.append("O departamento selecionado é inválido.")
 
-        return len(self.erros) == 0
+        if self.errors:
+            return False
 
-    def inserir(self):
+        self._dados.update({
+            "matricula": str(matricula).strip(),
+            "nome": str(nome).strip(),
+            "titulacao": titulacao,
+            "numero_departamento": numero_departamento
+        })
+
+        return True
+
+    def save(self):
         """Valida e grava o professor no banco. Retorna True em caso de sucesso."""
-        if not self.validar():
+        if not self.validate():
             return False
 
         try:
-            professor_dao.inserir(
-                str(self._dados.get("matricula")).strip(),
-                str(self._dados.get("nome")).strip(),
-                self._dados.get("titulacao"),
-                int(self._dados.get("numero_departamento")),
-            )
+            ProfessorDAO.inserir(self._dados)
+
         except sqlite3.IntegrityError as erro:
             mensagem = str(erro)
 
             if "professor.matricula" in mensagem:
-                self.erros.append("Já existe um professor com essa matrícula.")
+                self.errors.append(
+                    "Já existe um professor com essa matrícula."
+                )
             elif "FOREIGN KEY" in mensagem:
-                self.erros.append("O departamento selecionado não existe.")
+                self.errors.append(
+                    "O departamento selecionado não existe."
+                )
             else:
-                self.erros.append("Não foi possível cadastrar o professor.")
+                self.errors.append(
+                    "Não foi possível cadastrar o professor."
+                )
 
             return False
 
         return True
 
     @staticmethod
-    def buscar_por_matricula(matricula):
-        """Busca um professor pela matrícula."""
-        return professor_dao.buscar_por_matricula(matricula)
-
-    @staticmethod
-    def listar_todos():
+    def exibir_professores():
         """Retorna todos os professores cadastrados."""
-        return professor_dao.listar_todos()
+        return ProfessorDAO.listar()
 
     @staticmethod
-    def atualizar(matricula, nome, titulacao, numero_departamento):
+    def verificar_matricula(matricula):
+        """Busca um professor pela matrícula."""
+        return ProfessorDAO.buscar_por_matricula(matricula)
+
+    @staticmethod
+    def atualizar_professor(matricula, dados):
         """Atualiza os dados de um professor existente."""
-        professor_dao.atualizar(matricula, nome, titulacao, numero_departamento)
+        return ProfessorDAO.atualizar(matricula, dados)
 
     @staticmethod
-    def remover(matricula):
+    def excluir_professor(matricula):
         """Remove o professor com a matrícula informada."""
-        professor_dao.remover(matricula)
+        return ProfessorDAO.excluir(matricula)
+
+    @property
+    def matricula(self):
+        return self._dados.get("matricula")
+
+    @property
+    def nome(self):
+        return self._dados.get("nome")
+
+    @property
+    def titulacao(self):
+        return self._dados.get("titulacao")
+
+    @property
+    def numero_departamento(self):
+        return self._dados.get("numero_departamento")
+
+    @property
+    def departamento(self):
+        return self._dados.get("departamento")

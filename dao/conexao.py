@@ -1,12 +1,12 @@
 import sqlite3
-from contextlib import contextmanager
+from pathlib import Path
+
+CAMINHO_BANCO = Path(__file__).resolve().parent.parent / "sistema.db"
 
 
 def conectar():
     """Abre e retorna uma conexão com o banco de dados SQLite."""
-    conexao = sqlite3.connect("sistema.db")
-
-    # Permite acessar as colunas pelo nome (ex.: linha["descricao"])
+    conexao = sqlite3.connect(CAMINHO_BANCO)
     conexao.row_factory = sqlite3.Row
 
     # Ativa a verificação de chaves estrangeiras no SQLite
@@ -15,34 +15,19 @@ def conectar():
     return conexao
 
 
-@contextmanager
-def conexao_banco():
-    """Abre uma conexão, confirma as alterações e fecha ao final (mesmo com erro)."""
+def criar_tabelas():
+    """Cria as tabelas 'departamento' e 'professor' caso ainda não existam."""
     conexao = conectar()
 
     try:
-        yield conexao
-        conexao.commit()  # Confirma (salva) as alterações
-    except Exception:
-        conexao.rollback()  # Desfaz a operação em caso de erro
-        raise
-    finally:
-        conexao.close()  # Garante que a conexão seja sempre fechada
-
-
-def criar_tabelas():
-    """Cria as tabelas 'departamento' e 'professor' caso ainda não existam."""
-    with conexao_banco() as conexao:
-        cursor = conexao.cursor()
-
-        cursor.execute("""
+        conexao.execute("""
             CREATE TABLE IF NOT EXISTS departamento (
                 numero INTEGER PRIMARY KEY,
                 descricao TEXT NOT NULL
             )
         """)
 
-        cursor.execute("""
+        conexao.execute("""
             CREATE TABLE IF NOT EXISTS professor (
                 matricula TEXT PRIMARY KEY,
                 nome TEXT NOT NULL,
@@ -62,3 +47,8 @@ def criar_tabelas():
                 REFERENCES departamento(numero)
             )
         """)
+
+        conexao.commit()
+
+    finally:
+        conexao.close()

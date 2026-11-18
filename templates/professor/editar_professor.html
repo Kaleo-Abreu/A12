@@ -28,7 +28,7 @@
         </div>
         {% endif %}
 
-        <form action="{{ url_for('editar_professor', matricula=professor.matricula) }}"
+        <form action="{{ url_for('salvar_edicao_professor', matricula=professor.matricula) }}"
               method="POST">
 
             <div class="mb-5">
